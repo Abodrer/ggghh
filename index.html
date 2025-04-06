@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار سرعة الكتابة</title>
+    <title>Typing Speed Test</title>
     <style>
         * {
             margin: 0;
@@ -20,38 +20,39 @@
             min-height: 100vh;
             background: #f0f2f5;
             color: #333;
-            transition: all 0.3s ease;
+            transition: background 0.5s ease, color 0.5s ease;
         }
 
         .container {
             background: #fff;
-            padding: 30px;
+            padding: 2rem;
             border-radius: 20px;
-            width: 800px;
+            width: 90%;
+            max-width: 800px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            transition: background 0.5s ease, box-shadow 0.5s ease;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
 
         h1 {
-            font-size: 1.8rem;
+            font-size: clamp(1.5rem, 4vw, 1.8rem);
             color: #2c3e50;
         }
 
         .theme-toggle {
-            padding: 8px 15px;
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 20px;
             background: #3498db;
             color: #fff;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.3s ease;
         }
 
         .theme-toggle:hover {
@@ -60,12 +61,12 @@
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .tab {
-            padding: 10px 20px;
+            padding: 0.6rem 1.2rem;
             border-radius: 15px;
             background: #ecf0f1;
             cursor: pointer;
@@ -79,36 +80,51 @@
 
         .text-display {
             background: #ecf0f1;
-            padding: 20px;
+            padding: 1.5rem;
             border-radius: 15px;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
             line-height: 1.6;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
             user-select: none;
             color: #2c3e50;
+            overflow-wrap: break-word;
+        }
+
+        .text-display span {
+            transition: all 0.2s ease;
+            display: inline-block;
         }
 
         .text-display span.correct {
             color: #27ae60;
+            transform: scale(1.05);
         }
 
         .text-display span.incorrect {
             color: #e74c3c;
+            transform: scale(1.05);
         }
 
         .text-display span.current {
             background: rgba(52, 152, 219, 0.3);
-            padding: 2px 5px;
+            padding: 0.2rem 0.4rem;
             border-radius: 5px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         textarea {
             width: 100%;
             height: 120px;
-            padding: 15px;
+            padding: 1rem;
             border: 1px solid #ddd;
             border-radius: 15px;
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
             resize: none;
             background: #fff;
             color: #333;
@@ -119,29 +135,29 @@
         .stats {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
             color: #7f8c8d;
         }
 
         .stats span {
             background: #ecf0f1;
-            padding: 10px 20px;
+            padding: 0.6rem 1.2rem;
             border-radius: 10px;
         }
 
         .controls {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
 
         .btn {
-            padding: 12px 25px;
+            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 25px;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -201,40 +217,46 @@
             background: #3498db;
         }
 
-        /* Additional Themes */
-        body.blue {
-            background: #3498db;
-        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
 
-        body.green {
-            background: #2ecc71;
-        }
+            .tabs {
+                flex-direction: column;
+            }
 
-        body.purple {
-            background: #9b59b6;
+            .stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>اختبار سرعة الكتابة</h1>
-            <button class="theme-toggle" id="themeToggle">الوضع الداكن</button>
+            <h1>Typing Speed Test</h1>
+            <button class="theme-toggle" id="themeToggle">Dark Mode</button>
         </div>
         <div class="tabs">
-            <div class="tab active" data-type="words">كلمات</div>
-            <div class="tab" data-type="sentences">جمل</div>
+            <div class="tab active" data-type="words">Words</div>
+            <div class="tab" data-type="sentences">Sentences</div>
         </div>
         <div class="text-display" id="textDisplay"></div>
-        <textarea id="typingArea" placeholder="ابدأ الكتابة هنا..."></textarea>
+        <textarea id="typingArea" placeholder="Start typing here..."></textarea>
         <div class="stats">
-            <span>الوقت: <span id="timer">60</span> ث</span>
-            <span>الكلمات: <span id="wpm">0</span> كلمة/د</span>
-            <span>الدقة: <span id="accuracy">0</span>%</span>
+            <span>Time: <span id="timer">60</span>s</span>
+            <span>Words: <span id="wpm">0</span> WPM</span>
+            <span>Accuracy: <span id="accuracy">0</span>%</span>
         </div>
         <div class="controls">
-            <button class="btn start-btn" id="startBtn">ابدأ</button>
-            <button class="btn stop-btn" id="stopBtn">إيقاف</button>
+            <button class="btn start-btn" id="startBtn">Start</button>
+            <button class="btn stop-btn" id="stopBtn">Stop</button>
         </div>
     </div>
 
@@ -249,11 +271,11 @@
         const themeToggle = document.getElementById('themeToggle');
         const tabs = document.querySelectorAll('.tab');
 
-        const wordList = ["سرعة", "كتابة", "اختبار", "مهارة", "وقت", "دقة", "تحدي", "تدريب", "احتراف", "ممتع"];
+        const wordList = ["speed", "typing", "test", "skill", "time", "accuracy", "challenge", "practice", "pro", "fun"];
         const sentenceList = [
-            "هذا اختبار لسرعة الكتابة الخاصة بك.",
-            "حاول أن تكتب بأسرع ما يمكن وبدقة.",
-            "الوقت محدود لذا ركز جيدًا."
+            "This is a test for your typing speed.",
+            "Try to type as fast as you can with accuracy.",
+            "Time is limited so focus well."
         ];
 
         let currentText = [];
@@ -262,8 +284,7 @@
         let isRunning = false;
         let correctChars = 0;
         let totalChars = 0;
-        let themeIndex = 0;
-        const themes = ['light', 'dark', 'blue', 'green', 'purple'];
+        let isDark = false;
 
         function generateText(type) {
             if (type === 'words') {
@@ -350,9 +371,9 @@
         generateText('words');
 
         themeToggle.addEventListener('click', () => {
-            themeIndex = (themeIndex + 1) % themes.length;
-            document.body.className = themes[themeIndex];
-            themeToggle.textContent = themeIndex === 0 ? 'الوضع الداكن' : `السمة ${themes[themeIndex]}`;
+            isDark = !isDark;
+            document.body.className = isDark ? 'dark' : '';
+            themeToggle.textContent = isDark ? 'Default Mode' : 'Dark Mode';
         });
     </script>
 </body>
