@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار سرعة الكتابة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            width: 700px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #fff;
+        }
+
+        .text-display {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            user-select: none;
+        }
+
+        .text-display .correct {
+            color: #00ff9d;
+        }
+
+        .text-display .incorrect {
+            color: #ff4d4d;
+        }
+
+        .text-display .current {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            resize: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            outline: none;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+
+        .stats span {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .btn {
+            display: block;
+            width: 150px;
+            margin: 20px auto 0;
+            padding: 12px;
+            background: #00ff9d;
+            border: none;
+            border-radius: 25px;
+            color: #1e3c72;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>اختبار سرعة الكتابة</h1>
+        <div class="text-display" id="textDisplay"></div>
+        <textarea id="typingArea" placeholder="ابدأ الكتابة هنا..."></textarea>
+        <div class="stats">
+            <span>الوقت: <span id="timer">60</span> ث</span>
+            <span>السرعة: <span id="wps">0</span> كلمة/ث</span>
+            <span>الدقة: <span id="accuracy">0</span>%</span>
+        </div>
+        <button class="btn" id="resetBtn">إعادة المحاولة</button>
+    </div>
+
+    <script>
+        const textDisplay = document.getElementById('textDisplay');
+        const typingArea = document.getElementById('typingArea');
+        const timerDisplay = document.getElementById('timer');
+        const wpsDisplay = document.getElementById('wps');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const sampleText = "هذا نص تجريبي لاختبار سرعتك في الكتابة، حاول أن تكتب بسرعة وبدقة عالية، الوقت محدود!";
+        let timeLeft = 60;
+        let timer = null;
+        let typedWords = 0;
+        let correctChars = 0;
+        let totalChars = 0;
+
+        function startTest() {
+            if (timer) return;
+            textDisplay.innerHTML = sampleText.split('').map(char => `<span>${char}</span>`).join('');
+            typingArea.value = '';
+            timeLeft = 60;
+            typedWords = 0;
+            correctChars = 0;
+            totalChars = 0;
+            timerDisplay.textContent = timeLeft;
+            wpsDisplay.textContent = '0';
+            accuracyDisplay.textContent = '0';
+            typingArea.focus();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            const typed = typingArea.value;
+            const chars = textDisplay.querySelectorAll('span');
+            totalChars = typed.length;
+
+            chars.forEach((char, index) => {
+                char.className = '';
+                if (index < typed.length) {
+                    if (typed[index] === char.textContent) {
+                        char.className = 'correct';
+                        if (index === typed.length - 1) char.className += ' current';
+                        correctChars = Array.from(chars).slice(0, typed.length).filter(c => c.className === 'correct').length;
+                    } else {
+                        char.className = 'incorrect';
+                        if (index === typed.length - 1) char.className += ' current';
+                    }
+                } else if (index === typed.length) {
+                    char.className = 'current';
+                }
+            });
+
+            const words = typed.trim().split(/\s+/).length;
+            typedWords = timeLeft === 60 ? 0 : words;
+            const wps = timeLeft === 60 ? 0 : (typedWords / (60 - timeLeft)).toFixed(2);
+            const accuracy = totalChars === 0 ? 0 : ((correctChars / totalChars) * 100).toFixed(1);
+
+            wpsDisplay.textContent = wps;
+            accuracyDisplay.textContent = accuracy;
+        }
+
+        function endTest() {
+            clearInterval(timer);
+            timer = null;
+            typingArea.disabled = true;
+        }
+
+        typingArea.addEventListener('input', () => {
+            if (!timer) startTest();
+            updateDisplay();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            clearInterval(timer);
+            timer = null;
+            typingArea.disabled = false;
+            textDisplay.innerHTML = '';
+            typingArea.value = '';
+            timeLeft = 60;
+            timerDisplay.textContent = timeLeft;
+            wpsDisplay.textContent = '0';
+            accuracyDisplay.textContent = '0';
+        });
+    </script>
+</body>
+      </html> 
