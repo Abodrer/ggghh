@@ -21,6 +21,7 @@
             background: #f0f2f5;
             color: #333;
             transition: background 0.5s ease, color 0.5s ease;
+            overflow: hidden;
         }
 
         .container {
@@ -31,6 +32,7 @@
             max-width: 800px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             transition: background 0.5s ease, box-shadow 0.5s ease;
+            position: relative;
         }
 
         .header {
@@ -52,11 +54,12 @@
             background: #3498db;
             color: #fff;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.2s ease;
         }
 
         .theme-toggle:hover {
             background: #2980b9;
+            transform: scale(1.05);
         }
 
         .tabs {
@@ -88,34 +91,55 @@
             user-select: none;
             color: #2c3e50;
             overflow-wrap: break-word;
+            position: relative;
         }
 
         .text-display span {
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             display: inline-block;
+            opacity: 0.8;
         }
 
         .text-display span.correct {
             color: #27ae60;
-            transform: scale(1.05);
+            transform: translateY(-2px) scale(1.1);
+            opacity: 1;
+            animation: pop 0.2s ease;
         }
 
         .text-display span.incorrect {
             color: #e74c3c;
-            transform: scale(1.05);
+            transform: translateY(2px) scale(1.1);
+            opacity: 1;
+            animation: shake 0.2s ease;
         }
 
         .text-display span.current {
             background: rgba(52, 152, 219, 0.3);
             padding: 0.2rem 0.4rem;
             border-radius: 5px;
-            animation: pulse 1s infinite;
+            animation: glow 1.5s infinite ease-in-out;
+            opacity: 1;
         }
 
-        @keyframes pulse {
+        @keyframes pop {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: translateY(-2px) scale(1.1); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+            100% { transform: translateY(2px) scale(1.1); }
+        }
+
+        @keyframes glow {
+            0% { background: rgba(52, 152, 219, 0.3); }
+            50% { background: rgba(52, 152, 219, 0.6); }
+            100% { background: rgba(52, 152, 219, 0.3); }
         }
 
         textarea {
@@ -144,6 +168,7 @@
             background: #ecf0f1;
             padding: 0.6rem 1.2rem;
             border-radius: 10px;
+            transition: all 0.3s ease;
         }
 
         .controls {
@@ -169,15 +194,41 @@
 
         .start-btn:hover {
             background: #27ae60;
+            transform: scale(1.05);
         }
 
-        .stop-btn {
-            background: #e74c3c;
+        .retry-btn {
+            background: #3498db;
             color: #fff;
         }
 
-        .stop-btn:hover {
-            background: #c0392b;
+        .retry-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease;
+            display: none;
+        }
+
+        .modal h2 {
+            color: #e74c3c;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
         }
 
         /* Dark Theme */
@@ -215,6 +266,10 @@
 
         .dark .tab.active {
             background: #3498db;
+        }
+
+        .dark .modal {
+            background: rgba(52, 73, 94, 0.95);
         }
 
         @media (max-width: 600px) {
@@ -256,7 +311,11 @@
         </div>
         <div class="controls">
             <button class="btn start-btn" id="startBtn">Start</button>
-            <button class="btn stop-btn" id="stopBtn">Stop</button>
+        </div>
+        <div class="modal" id="endModal">
+            <h2>Time's Up!</h2>
+            <p>Your results: <span id="finalWPM"></span> WPM, <span id="finalAccuracy"></span>% Accuracy</p>
+            <button class="btn retry-btn" id="retryBtn">Retry</button>
         </div>
     </div>
 
@@ -267,16 +326,23 @@
         const wpmDisplay = document.getElementById('wpm');
         const accuracyDisplay = document.getElementById('accuracy');
         const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
         const themeToggle = document.getElementById('themeToggle');
         const tabs = document.querySelectorAll('.tab');
+        const endModal = document.getElementById('endModal');
+        const finalWPM = document.getElementById('finalWPM');
+        const finalAccuracy = document.getElementById('finalAccuracy');
+        const retryBtn = document.getElementById('retryBtn');
 
-        const wordList = ["speed", "typing", "test", "skill", "time", "accuracy", "challenge", "practice", "pro", "fun"];
-        const sentenceList = [
-            "This is a test for your typing speed.",
-            "Try to type as fast as you can with accuracy.",
-            "Time is limited so focus well."
+        const wordList = ["quick", "brown", "fox", "jumps", "over", "lazy", "dog", "river", "mountain", "forest", "cloud", "sky", "wind", "ocean", "stone"];
+        const sentenceBase = [
+            ["The", "runs", "through", "the", "valley"],
+            ["A", "flies", "high", "above", "the"],
+            ["She", "walks", "along", "the", "path"],
+            ["He", "climbs", "up", "the", "ridge"],
+            ["They", "sail", "across", "the", "sea"]
         ];
+        const sentenceNouns = ["bird", "river", "path", "mountain", "ship"];
+        let usedSentences = new Set();
 
         let currentText = [];
         let timer = null;
@@ -286,11 +352,27 @@
         let totalChars = 0;
         let isDark = false;
 
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
         function generateText(type) {
             if (type === 'words') {
-                currentText = Array(20).fill().map(() => wordList[Math.floor(Math.random() * wordList.length)]);
+                const shuffledWords = shuffleArray([...wordList]);
+                currentText = shuffledWords.slice(0, 20).filter((word, i, arr) => arr.indexOf(word) === i);
             } else {
-                currentText = sentenceList[Math.floor(Math.random() * sentenceList.length)].split(' ');
+                let sentence;
+                do {
+                    const base = sentenceBase[Math.floor(Math.random() * sentenceBase.length)];
+                    const noun = sentenceNouns[Math.floor(Math.random() * sentenceNouns.length)];
+                    sentence = [...base.slice(0, -1), noun].join(' ');
+                } while (usedSentences.has(sentence) && usedSentences.size < sentenceBase.length * sentenceNouns.length);
+                usedSentences.add(sentence);
+                currentText = sentence.split(' ');
             }
             textDisplay.innerHTML = currentText.map(word => `<span>${word}</span>`).join(' ');
         }
@@ -306,6 +388,7 @@
             wpmDisplay.textContent = '0';
             accuracyDisplay.textContent = '0';
             typingArea.disabled = false;
+            endModal.style.display = 'none';
             typingArea.focus();
 
             timer = setInterval(() => {
@@ -315,15 +398,13 @@
             }, 1000);
         }
 
-        function stopTest() {
-            if (!isRunning) return;
+        function endTest() {
             clearInterval(timer);
             isRunning = false;
             typingArea.disabled = true;
-        }
-
-        function endTest() {
-            stopTest();
+            finalWPM.textContent = wpmDisplay.textContent;
+            finalAccuracy.textContent = accuracyDisplay.textContent;
+            endModal.style.display = 'block';
         }
 
         function updateDisplay() {
@@ -353,7 +434,7 @@
         }
 
         startBtn.addEventListener('click', startTest);
-        stopBtn.addEventListener('click', stopTest);
+        retryBtn.addEventListener('click', startTest);
         typingArea.addEventListener('input', () => {
             if (!isRunning) startTest();
             updateDisplay();
@@ -364,7 +445,11 @@
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 generateText(tab.dataset.type);
-                stopTest();
+                if (!isRunning) {
+                    typingArea.value = '';
+                    wpmDisplay.textContent = '0';
+                    accuracyDisplay.textContent = '0';
+                }
             });
         });
 
